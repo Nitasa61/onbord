@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mohon tunggu…</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #0b0f19; color: #fff; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 18px; }
+    .card { background: #121a2b; border: 1px solid #223055; border-radius: 14px; padding: 16px; }
+    .title { font-size: 20px; margin: 0 0 10px; }
+    .sub { opacity: .85; margin: 0 0 16px; line-height: 1.4; }
+    .video { position: relative; width: 100%; padding-top: 56.25%; border-radius: 12px; overflow: hidden; background: #000; }
+    .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .row { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+    .pill { background: #1b2a4a; border: 1px solid #2a3d6a; padding: 10px 12px; border-radius: 999px; }
+    .btn { cursor: pointer; border: 0; border-radius: 12px; padding: 12px 14px; font-weight: 700; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary { background: #4b7dff; color: #fff; }
+    .btn-ghost { background: transparent; color: #fff; border: 1px solid #3a508a; }
+    .note { margin-top: 12px; font-size: 12px; opacity: .75; }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; padding: 18px; }
+    .modal { max-width: 520px; width: 100%; background: #121a2b; border: 1px solid #223055; border-radius: 14px; padding: 16px; }
+    .modal h2 { margin: 0 0 8px; font-size: 18px; }
+    .modal p { margin: 0 0 14px; opacity: .9; line-height: 1.4; }
+    .modal .actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Mohon tunggu sebentar…</h1>
+      <p class="sub">
+        Tonton video singkat ini. Setelah <b>5 detik</b> kamu bisa lanjut ke halaman download.
+      </p>
+
+      <div class="video">
+        <iframe
+          id="yt"
+          src=""
+          title="YouTube video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <div class="row">
+        <div class="pill">⏳ <span id="count">5</span> detik</div>
+        <button id="btn" class="btn btn-primary" disabled>Lanjutkan</button>
+        <button id="help" class="btn btn-ghost" type="button">Jika video tidak jalan, klik ini</button>
+      </div>
+
+      <div class="note">
+        Catatan: autoplay YouTube kadang diblok di HP. Timer tetap jalan, tombol aktif setelah 5 detik.
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="backdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h2>Apakah kamu ingin melanjutkan?</h2>
+      <p>Kamu akan diarahkan ke halaman download.</p>
+      <div class="actions">
+        <button id="no" class="btn btn-ghost">Batal</button>
+        <button id="yes" class="btn btn-primary">Iya, lanjutkan</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ====== KONFIGURASI ======
+  const YT_VIDEO_ID = "viM5i7rfPDo";
+  const WAIT_SECONDS = 5;
+
+  // Pastikan pakai https:// (penting biar tidak dianggap mixed-content / redirect aneh)
+  const DOWNLOAD_URLS = [
+    "https://otieu.com/4/10465727",
+    "https://otieu.com/4/3609145",
+    "https://otieu.com/4/10465747"
+  ];
+  // =========================
+
+  const countEl = document.getElementById("count");
+  const btn = document.getElementById("btn");
+  const backdrop = document.getElementById("backdrop");
+  const yes = document.getElementById("yes");
+  const no = document.getElementById("no");
+  const yt = document.getElementById("yt");
+  const help = document.getElementById("help");
+
+  // Pilih 1 URL tujuan secara random (sekali saja per visitor yang buka halaman ini)
+  const chosenUrl = DOWNLOAD_URLS[Math.floor(Math.random() * DOWNLOAD_URLS.length)];
+
+  // YouTube embed (autoplay + muted agar peluang autoplay lebih tinggi)
+  function setYT(mode) {
+    const autoplay = mode === "autoplay" ? 1 : 0;
+    yt.src =
+      `https://www.youtube.com/embed/${encodeURIComponent(YT_VIDEO_ID)}` +
+      `?autoplay=${autoplay}&mute=1&playsinline=1&controls=1&rel=0&modestbranding=1`;
+  }
+  setYT("autoplay");
+
+  // Countdown 5 detik
+  let remaining = WAIT_SECONDS;
+  countEl.textContent = remaining;
+
+  const timer = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      clearInterval(timer);
+      countEl.textContent = "0";
+      btn.disabled = false;
+
+      // Munculkan modal konfirmasi
+      backdrop.style.display = "flex";
+    } else {
+      countEl.textContent = remaining;
+    }
+  }, 1000);
+
+  // Tombol lanjutkan buka modal lagi (kalau user sempat tutup)
+  btn.addEventListener("click", () => {
+    backdrop.style.display = "flex";
+  });
+
+  // Modal: batal
+  no.addEventListener("click", () => {
+    backdrop.style.display = "none";
+  });
+
+  // Modal: lanjut -> redirect ke link random yang sudah dipilih
+  yes.addEventListener("click", () => {
+    window.location.href = chosenUrl;
+  });
+
+  // Kalau video tidak jalan, reload iframe tanpa autoplay
+  help.addEventListener("click", () => {
+    setYT("manual");
+  });
+</script>
+</body>
+</html>
